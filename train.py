@@ -46,7 +46,7 @@ for epoch in range(epochs):
     if i % batch_size == 0:
       if not os.path.exists(LOGDIR):
         os.makedirs(LOGDIR)
-      checkpoint_path = os.path.join(LOGDIR, "model.ckpt")
+      checkpoint_path = os.path.join(LOGDIR, "udacity_model.ckpt")
       filename = saver.save(sess, checkpoint_path)
   print("Model saved in file: %s" % filename)
 

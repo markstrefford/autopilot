@@ -23,7 +23,8 @@ import csv
 
 sess = tf.InteractiveSession()
 saver = tf.train.Saver()
-saver.restore(sess, "save/model.ckpt")
+#saver.restore(sess, "save/model.ckpt")
+saver.restore(sess, "save/udacity_model.ckpt")
 
 # Setup viewer
 frame_size = (640,480)
