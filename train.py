@@ -21,7 +21,7 @@ tf.scalar_summary("loss", loss)
 merged_summary_op = tf.merge_all_summaries()
 
 saver = tf.train.Saver()
-
+saver.restore(sess, 'save/model.ckpt')  # Start with the pre-trainied autopilot model
 # op to write logs to Tensorboard
 logs_path = './logs'
 summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
@@ -46,7 +46,7 @@ for epoch in range(epochs):
     if i % batch_size == 0:
       if not os.path.exists(LOGDIR):
         os.makedirs(LOGDIR)
-      checkpoint_path = os.path.join(LOGDIR, "udacity_model.ckpt")
+      checkpoint_path = os.path.join(LOGDIR, "udacity_model.ckpt")   # But remember to save out to udacity model!!
       filename = saver.save(sess, checkpoint_path)
   print("Model saved in file: %s" % filename)
 

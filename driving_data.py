@@ -5,6 +5,9 @@ import csv
 xs = []
 ys = []
 
+deg_to_rad = scipy.pi / 180.0
+rad_to_deg = 180.0 / scipy.pi
+
 #points to the end of the last batch
 train_batch_pointer = 0
 val_batch_pointer = 0
@@ -25,8 +28,10 @@ with open("/vol/data/train_center.csv") as f:
         for row in reader:
             filename = '/vol/data/' + row['filename']  # + '.jpg'
             steering_angle = float(row['steering_angle'])
-            xs.append(filename)
-            ys.append(steering_angle)
+            steering_angle_deg = steering_angle * rad_to_deg
+            if steering_angle_deg > 3 or random.random() > 0.5:   # Reduce straight line driving by 50%
+                xs.append(filename)
+                ys.append(steering_angle)
 cut = -180  # Estimate equivalent for Udacity
 
 #get number of images
