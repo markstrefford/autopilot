@@ -6,7 +6,7 @@ import argparse
 
 L2NormConst = 0.001
 
-def train(load_model):
+def train(load_model, LOGDIR, logs_path, save_model):
   sess = tf.InteractiveSession()
   train_vars = tf.trainable_variables()
 
@@ -22,9 +22,9 @@ def train(load_model):
   saver = tf.train.Saver()
   if load_model != False:
     saver.restore(sess, load_model)  # Start with the pre-trainied autopilot model
-      
+
   # op to write logs to Tensorboard
-  logs_path = './logs'
+  #logs_path = './logs'
   summary_writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
 
   epochs = 30
@@ -47,7 +47,7 @@ def train(load_model):
       if i % batch_size == 0:
         if not os.path.exists(LOGDIR):
           os.makedirs(LOGDIR)
-        checkpoint_path = os.path.join(LOGDIR, "udacity_model.ckpt")   # But remember to save out to udacity model!!
+        checkpoint_path = os.path.join(LOGDIR, save_model)
         filename = saver.save(sess, checkpoint_path)
     print("Model saved in file: %s" % filename)
 
@@ -60,21 +60,13 @@ if __name__ == '__main__':
                         default=False, help='Load a pre-trained model (assume that the model architecture is the same!)')
     parser.add_argument('--logdir', action='store', dest='logdir',
                         default='./save', help='Log directory')
-
-
-    parser.add_argument('--data-dir', '--data', action='store', dest='data_dir',
-                        default='/vol/test/')
-    parser.add_argument('--delimiter', action='store', dest='delimiter',
-                        default=',', help='Delimeter')
-    parser.add_argument('--units', action='store', dest='steering_units',
-                        default='rad', help='Units: rad or deg')
-    parser.add_argument('--file-ext', action='store', dest='file_ext',
-                        default='', help='File extension for images if not in csv file, default is use what is in the csv file')
-    parser.add_argument('--cut', action='store', dest='cut',
-                        default='-150', help='Where to cut the image (Nvidia uses -150')
+    parser.add_argument('--logpath', action='store', dest='logpath',
+                        default='./logs', help='Log path directory')
+    parser.add_argument('--save-model', action='store', dest='save_model',
+                        default='model.ckpt', help='Name to save model as')
     args = parser.parse_args()
 
-    train(args.load_model)
+    train(args.load_model, args.logdir, args.logpath, args.save_model)
 
     print("Run the command line:\n" \
           "--> tensorboard --logdir=./logs " \
