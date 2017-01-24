@@ -12,7 +12,7 @@ deg_to_rad = scipy.pi / 180.0
 rad_to_deg = 180.0 / scipy.pi
 
 class DataReader(object):
-    def __init__(self, data_dir=DATA_DIR, data_csv=DATA_CSV, file_ext=FILE_EXT, sequential=False, udacity=True):
+    def __init__(self, data_dir, data_csv, file_ext, sequential, udacity):
         self.data_dir = data_dir
         self.data_csv = data_csv
         self.file_ext = file_ext
@@ -28,32 +28,43 @@ class DataReader(object):
         self.train_batch_pointer = 0
         self.val_batch_pointer = 0
 
-        #Read Udacity data (60x480)
-        if self.udacity == True:
-            with open(self.data_csv) as f:
-                    reader = csv.DictReader(f, delimiter=',')
-                    for row in reader:
-                        filename = self.data_dir + row['filename']  # + '.jpg'
-                        steering_angle = float(row['steering_angle'])
-                        xs.append(filename)
-                        ys.append(steering_angle)
-        else:
-            # Read data in autopilot format... (455x150, 455x210, etc.)
-            with open(self.data_csv) as f:
-                for line in f:
-                        xs.append(self.data_dir + line.split()[0])
-                        #the paper by Nvidia uses the inverse of the turning radius,
-                        #but steering wheel angle is proportional to the inverse of turning radius
-                        #so the steering wheel angle in radians is used as the output
-                        ys.append(float(line.split()[1]) * deg_to_rad)
+        # TODO - Work through best approach for different delimeters!!
+        #
+        # Read Udacity data (60x480)
+        # if self.udacity == True:
+        #     with open(self.data_csv) as f:
+        #             reader = csv.DictReader(f, delimiter=',')
+        #             for row in reader:
+        #                 filename = self.data_dir + '/' + row['filename']  # + '.jpg'
+        #                 steering_angle = float(row['steering_angle'])
+        #                 xs.append(filename)
+        #                 ys.append(steering_angle)
+        # else:
+        #     # Read data in autopilot format... (455x150, 455x210, etc.)
+        # with open(self.data_csv) as f:
+        #     for line in f:
+        #             xs.append(self.data_dir + line.split()[0])
+        #             #the paper by Nvidia uses the inverse of the turning radius,
+        #             #but steering wheel angle is proportional to the inverse of turning radius
+        #             #so the steering wheel angle in radians is used as the output
+        #             ys.append(float(line.split()[1]) * deg_to_rad)
+
+        with open(self.data_csv) as f:
+                #reader = csv.DictReader(f, delimiter=',')
+                reader = csv.DictReader(f, delimiter=' ')
+                for row in reader:
+                    filename = self.data_dir + '/' + row['filename']  # + '.jpg'
+                    steering_angle = float(row['steering_angle']) * deg_to_rad 
+                    xs.append(filename)
+                    ys.append(steering_angle)
 
         #get number of images
         num_images = len(xs)
 
         #shuffle list of images
-        c = list(zip(xs, ys))
-        random.shuffle(c)
-        xs, ys = zip(*c)
+        # c = list(zip(xs, ys))
+        # random.shuffle(c)
+        # xs, ys = zip(*c)
 
         self.train_xs = xs[:int(len(xs) * 0.8)]
         self.train_ys = ys[:int(len(xs) * 0.8)]
@@ -64,33 +75,39 @@ class DataReader(object):
         self.num_train_images = len(self.train_xs)
         self.num_val_images = len(self.val_xs)
 
-    def load_image(self, udacity, filename):
-        if udacity:
-            return scipy.misc.imresize(scipy.misc.imread(filename)[159:370], [66, 200]) / 255.0
+    def _load_image(self, i, udacity, filename):
+        if udacity == 'True':
+            print 'udacity = True'
+            image = scipy.misc.imresize(scipy.misc.imread(filename)[159:370], [66, 200]) / 255.0
         else:
-            return scipy.misc.imresize(scipy.misc.imread(filename)[-150:], [66, 200]) / 255.0
+            image = scipy.misc.imresize(scipy.misc.imread(filename)[-150:], [66, 200]) / 255.0
+        #print '{}: {} / shape {}'.format(i, filename, image.shape)
+        return image
 
 
     def LoadTrainBatch(self, batch_size):
         x_out = []
         y_out = []
         for i in range(0, batch_size):
-            train_image = self.load_image(self.udacity, self.train_xs[(self.train_batch_pointer + i) % self.num_train_images])
-            #cv2.imshow("Train", train_image)
-            #cv2.waitKey(1)
+            train_image = self._load_image(i, self.udacity, self.train_xs[(self.train_batch_pointer + i) % self.num_train_images])
+            steering_angle = self.train_ys[(self.train_batch_pointer + i) % self.num_train_images]
+            cv2.imshow("Train ", train_image)
+            cv2.waitKey(1)
             x_out.append(train_image)
-            y_out.append([self.train_ys[(self.train_batch_pointer + i) % self.num_train_images]])
+            y_out.append([steering_angle])
         self.train_batch_pointer += batch_size
+        print "train:{}".format(y_out)
         return x_out, y_out
 
     def LoadValBatch(self, batch_size):
         x_out = []
         y_out = []
         for i in range(0, batch_size):
-            val_image = self.load_image(self.udacity, self.val_xs[(self.val_batch_pointer + i) % self.num_val_images])
-            #cv2.imshow("Val", val_image)
-            #cv2.waitKey(1)
+            val_image = self._load_image(i, self.udacity, self.val_xs[(self.val_batch_pointer + i) % self.num_val_images])
+            cv2.imshow("Val", val_image)
+            cv2.waitKey(1)
             x_out.append(val_image)
             y_out.append([self.val_ys[(self.val_batch_pointer + i) % self.num_val_images]])
         self.val_batch_pointer += batch_size
+        print "val:{}".format(y_out)
         return x_out, y_out
