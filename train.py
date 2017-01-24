@@ -1,6 +1,6 @@
 import os
 import tensorflow as tf
-import driving_data
+from driving_data import DataReader
 import model
 import argparse
 
@@ -30,13 +30,15 @@ def train(load_model, LOGDIR, logs_path, save_model):
   epochs = 30
   batch_size = 100
 
+  data_reader = DataReader()
+
   # train over the dataset about 30 times
   for epoch in range(epochs):
-    for i in range(int(driving_data.num_images/batch_size)):
-      xs, ys = driving_data.LoadTrainBatch(batch_size)
+    for i in range(int(data_reader.num_train_images/batch_size)):
+      xs, ys = data_reader.LoadTrainBatch(batch_size)
       train_step.run(feed_dict={model.x: xs, model.y_: ys, model.keep_prob: 0.8})
       if i % 10 == 0:
-        xs, ys = driving_data.LoadValBatch(batch_size)
+        xs, ys = data_reader.LoadValBatch(batch_size)
         loss_value = loss.eval(feed_dict={model.x:xs, model.y_: ys, model.keep_prob: 1.0})
         print("Epoch: %d, Step: %d, Loss: %g" % (epoch, epoch * batch_size + i, loss_value))
 
@@ -54,8 +56,10 @@ def train(load_model, LOGDIR, logs_path, save_model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run model on test data and write to file')
-    parser.add_argument('--input', '-i', action='store', dest='input_file',
+    parser.add_argument('--csv', action='store', dest='input_file',
                         default='data.csv', help='Input model csv file name')
+    parser.add_argument('--data', '-d', action='store', dest='data_dir',
+                        default='/vol', help='Directory holding images')
     parser.add_argument('--load-model', action='store', dest='load_model',
                         default=False, help='Load a pre-trained model (assume that the model architecture is the same!)')
     parser.add_argument('--logdir', action='store', dest='logdir',
